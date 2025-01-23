@@ -1,0 +1,29 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Container(frontend, "Веб-интерфейс")
+
+Boundary(server, "Server") {
+    Boundary(streamingService, "Сервис для наблюдения за домом", "Java") {
+        Component(controller, "Controller", "Spring Controller", "Kafka consumer. Подписывается на соответствующий Kafka топик и читает все команды (например: сообщение о необходимости подключения к камере) и прокидывает команды дальше")
+        Component(command, "Command component", "Spring Bean", "Обрабатывает все команды от контроллера, проверяет их валидность, если все ок, то осуществляет WSS подключение через Kafka для передачи видео пользователю")
+    }
+
+    Container(apiGateway, "Api-gateway", "Kong")
+    ContainerDb(db, "Database", "PostgreSQL")
+    ContainerDb(kafka, "Kafka", "Kafka")
+}
+
+Boundary(sensors, "Sensors") {
+    System(sensor1, "Устройства камер")
+}
+
+Rel(frontend, apiGateway, "Requests", "HTTPS")
+Rel(apiGateway, kafka, "Write")
+Rel(controller, kafka, "Read")
+Rel(controller, command, "Uses")
+Rel(command, kafka, "Uses")
+BiRel(sensor1, kafka, "Send data", "HTTPS")
+
+Rel(kafka, db, "Read/Write")
+@enduml

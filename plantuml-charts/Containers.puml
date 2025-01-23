@@ -1,0 +1,37 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Person(user, "User")
+
+Container(frontend, "Веб-интерфейс")
+
+Boundary(server, "Server") {
+    Container(apiGateway, "Api-gateway", "Kong")
+
+    Container(controlSensorsService, "Сервис для управления устройствами", "Java")
+    Container(monitorTemperatureService, "Сервис для мониторинга температур", "Java")
+    Container(streamingService, "Сервис для наблюдения за домом", "Java")
+
+    ContainerDb(db, "Database", "PostgreSQL")
+    ContainerDb(kafka, "Kafka", "Kafka")
+}
+Boundary(sensors, "Sensors") {
+    System(sensor1, "Устройства отопления")
+    System(sensor2, "Устройства освещения")
+    System(sensor3, "Устройства управления воротами")
+    System(sensor4, "Устройства камер")
+}
+
+Rel(user, frontend, "Interaction")
+Rel(frontend, apiGateway, "Requests", "HTTPS")
+Rel(apiGateway, kafka, "Write")
+Rel(controlSensorsService, kafka, "Read/write")
+Rel(monitorTemperatureService, kafka, "Read/write")
+Rel(streamingService, kafka, "Read/write")
+BiRel(sensor1, kafka, "Send data", "HTTPS")
+BiRel(sensor2, kafka, "Send data", "HTTPS")
+BiRel(sensor3, kafka, "Send data", "HTTPS")
+BiRel(sensor4, kafka, "Send data", "HTTPS")
+
+Rel(kafka, db, "Read/Write")
+@enduml

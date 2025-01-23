@@ -1,0 +1,36 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Container(frontend, "Веб-интерфейс")
+
+Boundary(server, "Server") {
+    Boundary(controlSensorsService, "Сервис для управления устройствами", "Java") {
+        Component(controller, "Controller", "Spring Controller", "Kafka consumer. Подписывается на соответствующий Kafka топик и читает все команды (например: включить свет) и прокидывает команды дальше")
+        Component(command, "Command component", "Spring Bean", "Обрабатывает все команды от контроллера, проверяет их валидность, если все ок забирает необходимые данные из Devices component и исполняет команду")
+        Component(state, "Devices component", "Spring Bean", "Отвечает за конфигурацию всех текущих доступных устройств для управления (отопление, ворота, свет) и хранение их состояния")
+    }
+
+    Container(apiGateway, "Api-gateway", "Kong")
+    ContainerDb(db, "Database", "PostgreSQL")
+    ContainerDb(kafka, "Kafka", "Kafka")
+}
+
+Boundary(sensors, "Sensors") {
+    System(sensor1, "Устройства отопления")
+    System(sensor2, "Устройства освещения")
+    System(sensor3, "Устройства управления воротами")
+}
+
+Rel(frontend, apiGateway, "Requests", "HTTPS")
+Rel(apiGateway, kafka, "Write")
+Rel(controller, kafka, "Read")
+Rel(controller, command, "Uses")
+Rel(command, state, "Uses")
+Rel(command, kafka, "Write")
+Rel(state, kafka, "Uses")
+BiRel(sensor1, kafka, "Send data", "HTTPS")
+BiRel(sensor2, kafka, "Send data", "HTTPS")
+BiRel(sensor3, kafka, "Send data", "HTTPS")
+
+Rel(kafka, db, "Read/Write")
+@enduml
