@@ -1,0 +1,18 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Person(user, "User")
+
+System(frontend, "Веб-интерфейс")
+
+System(backend, "Web Application", "Java + PostgreSQL")
+System(sensor, "Датчик 1")
+System(sensor1, "Датчик 2")
+System(sensor2, "Датчик N")
+
+Rel(user, frontend, "Взаимодействие")
+Rel(frontend, backend, "Запросы", "HTTPS")
+Rel(backend, sensor, "Запрос к датчику")
+Rel(backend, sensor1, "Запрос к датчику")
+Rel(backend, sensor2, "Запрос к датчику")
+@enduml

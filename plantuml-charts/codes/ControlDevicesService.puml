@@ -1,0 +1,45 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Boundary(server, "Server") {
+    Boundary(controlDevicesService, "Сервис для управления устройствами", "Java") {
+        Component(f1, "userKafkaConsumer", "", "Подписка на чтение команд от юзера")
+        Component(f2, "handleCommand", "", "Проверка валидности команды")
+        Component(f3, "handleCommandException", "", "Завершение программы если команда невалидна")
+        Component(f4, "getDeviceConfiguration", "", "Получение конфигурации устройства (напр. метаданные))")
+        Component(f5, "getDeviceState", "", "Получение состояния устройства (напр. включена ли лампочка)")
+        Component(f6, "deviceConnectionFailure", "", "Девайс недоступен (напр. не в сети))")
+        Component(f7, "commandDeviceKafkaProducer", "", "Исполнение команд")
+        Component(f8, "logging", "", "Логирование всех действий и ошибок")
+        Component(f9, "getListOfDevices", "", "Получение списка устройств")
+        Component(f10, "telemetryGateway", "", "Осуществление соединения через телеметрию")
+    }
+
+    Container(apiGateway, "Api-gateway", "Kong")
+    ContainerDb(devicesDb, "Devices DB", "PostgreSQL")
+}
+
+Rel(apiGateway, f1, "Uses")
+Rel(f1, f2, "Uses")
+Rel(f2, f3, "Uses")
+Rel(f2, f4, "Uses")
+Rel(f2, f9, "Uses")
+Rel(f2, f5, "Uses")
+Rel(f2, f7, "Uses")
+Rel(f5, f6, "Uses")
+Rel(f7, f10, "Uses")
+
+Rel(f1, f8, "Write")
+Rel(f2, f8, "Write")
+Rel(f3, f8, "Write")
+Rel(f4, f8, "Write")
+Rel(f5, f8, "Write")
+Rel(f6, f8, "Write")
+Rel(f7, f8, "Write")
+
+Rel(f4, devicesDb, "Read/Write", "SQL")
+Rel(f5, devicesDb, "Read/Write", "SQL")
+Rel(f8, devicesDb, "Read/Write", "SQL")
+Rel(f9, devicesDb, "Read/Write", "SQL")
+
+@enduml

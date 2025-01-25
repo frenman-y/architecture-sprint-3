@@ -1,0 +1,74 @@
+@startuml
+skinparam linetype ortho
+
+entity "User" as user {
+  *user_id : number <<PK>>
+  --
+  *name : string
+  surname : string
+  *email : string
+  *password : string
+}
+
+entity "UserPreferences" as user_preferences {
+  *user_preferences_id : number <<PK>>
+  --
+  language : string
+  theme : string
+}
+
+entity "House" as house {
+  *house_id : number <<PK>>
+  --
+  *name: string
+  address: string
+  *is_active: boolean
+  --
+  *user_id : number <<FK>>
+}
+
+entity "Device" as device {
+  *device_id : number <<PK>>
+  --
+  *name : string
+  description : string
+  *version : string
+  *serial_number : number
+  *status : number
+  --
+  *type_id : number <<FK>>
+  *house_id : number <<FK>>
+  *device_configuration_id : number <<FK>>
+}
+
+entity "DeviceType" as device_type {
+  *device_type_id : number <<PK>>
+  --
+  *type : string
+}
+
+entity "DeviceConfiguration" as device_configuration {
+  *id : number <<PK>>
+  --
+  *preference : number
+  *power : number
+  --
+  *user_id : number <<FK>>
+}
+
+entity "TelemetryData" as telemetry {
+  *telemetry_id : number <<PK>>
+  --
+  *channel: string
+  *path: string
+}
+
+user ||..|{ house
+user ||..|| user_preferences
+house ||..|{ device
+device ||..|| device_type
+device ||..|| telemetry
+device ||..|| device_configuration
+
+
+@enduml

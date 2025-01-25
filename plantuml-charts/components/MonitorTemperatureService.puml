@@ -1,0 +1,27 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Container(frontend, "Веб-интерфейс")
+
+Boundary(server, "Server") {
+    Boundary(monitorTemperatureService, "Сервис для мониторинга температур", "Java") {
+        Component(controller, "Controller", "Spring Controller", "Kafka consumer. Подписывается на соответствующий Kafka топик и читает все команды (узнать температуру) и прокидывает команды дальше")
+        Component(command, "Command component", "Spring Bean", "Обрабатывает все команды от контроллера, проверяет их валидность, если все ок, то исполняет команду (забирает из БД температуру)")
+        Component(job, "Job component", "Spring Bean", "Раз в Х время опрашивает датчики отопления и пишет в БД, тем самым в БД всегда будут актуальные данные по температуре и их можно будет забрать без ожидания")
+    }
+
+    Container(apiGateway, "Api-gateway", "Kong")
+    ContainerDb(devicesDb, "Devices DB", "PostgreSQL")
+}
+
+Boundary(devices, "Devices") {
+    System(device1, "Устройства отопления")
+}
+
+Rel(frontend, apiGateway, "Requests", "HTTPS")
+Rel(apiGateway, controller, "Uses")
+Rel(controller, command, "Uses")
+Rel(job, device1, "Uses", "Telemetry")
+Rel(command, devicesDb, "Read/Write", "SQL")
+Rel(job, devicesDb, "Read/Write", "SQL")
+@enduml

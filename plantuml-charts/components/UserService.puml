@@ -1,0 +1,23 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Container(frontend, "Веб-интерфейс")
+
+Boundary(server, "Server") {
+    Boundary(userService, "Сервис для управления пользователями", "Java") {
+        Component(controller, "Controller", "Spring Controller", "Kafka consumer. Подписывается на соответствующий Kafka топик и читает все команды и прокидывает команды дальше")
+        Component(auth, "Authorization component", "Spring Bean", "Обрабатывает всю логику по регистрации и авторизации пользователя")
+        Component(preferences, "User preferences component", "Spring Bean", "Обрабатывает всю логику по настройками пользователей (изменение данных, предпочтений)")
+    }
+
+    Container(apiGateway, "Api-gateway", "Kong")
+    ContainerDb(usersDb, "Users DB", "PostgreSQL")
+}
+
+Rel(frontend, apiGateway, "Requests", "HTTPS")
+Rel(apiGateway, controller, "Uses")
+Rel(controller, auth, "Uses")
+Rel(controller, preferences, "Uses")
+Rel(auth, usersDb, "Read/Write", "SQL")
+Rel(preferences, usersDb, "Read/Write", "SQL")
+@enduml

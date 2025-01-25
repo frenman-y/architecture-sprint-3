@@ -1,0 +1,51 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Person(user, "User")
+
+Container(frontend, "Веб-интерфейс")
+
+Boundary(server, "Server") {
+    Container(apiGateway, "Api-gateway", "Kong")
+
+    Container(controlDevicesService, "Сервис для управления устройствами", "Java")
+    Container(monitorTemperatureService, "Сервис для мониторинга температур", "Java")
+    Container(streamingService, "Сервис для наблюдения за домом", "Java")
+    Container(userService, "Сервис для управления пользователями", "Java")
+
+    ContainerDb(usersDb, "Users DB", "PostgreSQL")
+    ContainerDb(devicesDb, "Devices DB", "PostgreSQL")
+}
+Boundary(devices, "Devices") {
+    System(device1, "Устройства отопления")
+    System(device2, "Устройства освещения")
+    System(device3, "Устройства управления воротами")
+    System(device4, "Устройства камер")
+}
+
+Rel(user, frontend, "Interaction")
+Rel(frontend, apiGateway, "Requests", "HTTPS")
+
+Rel(apiGateway, controlDevicesService, "Uses")
+Rel(apiGateway, monitorTemperatureService, "Uses")
+Rel(apiGateway, streamingService, "Uses")
+Rel(apiGateway, userService, "Uses")
+
+Rel(controlDevicesService, kafka, "Read")
+Rel(monitorTemperatureService, kafka, "Read")
+
+Rel(streamingService, kafka, "Read")
+Rel(userService, kafka, "Read")
+
+Rel(controlDevicesService, device1, "Uses", "Telemetry")
+Rel(monitorTemperatureService, device1, "Uses", "Telemetry")
+Rel(controlDevicesService, device2, "Uses", "Telemetry")
+Rel(controlDevicesService, device3, "Uses", "Telemetry")
+BiRel(streamingService, device4, "Uses", "Telemetry")
+
+Rel(streamingService, devicesDb, "Read/write", "SQL")
+Rel(userService, usersDb, "Read/write", "SQL")
+Rel(controlDevicesService, devicesDb, "Read/write", "SQL")
+Rel(monitorTemperatureService, devicesDb, "Read/write", "SQL")
+
+@enduml
