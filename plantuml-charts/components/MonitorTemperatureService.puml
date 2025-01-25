@@ -6,26 +6,22 @@ Container(frontend, "Веб-интерфейс")
 Boundary(server, "Server") {
     Boundary(monitorTemperatureService, "Сервис для мониторинга температур", "Java") {
         Component(controller, "Controller", "Spring Controller", "Kafka consumer. Подписывается на соответствующий Kafka топик и читает все команды (узнать температуру) и прокидывает команды дальше")
-        Component(command, "Command component", "Spring Bean", "Обрабатывает все команды от контроллера, проверяет их валидность, если все ок, то исполняет команду (забирает через Kafka из БД температуру)")
-        Component(job, "Job component", "Spring Bean", "Раз в Х время опрашивает датчики отопления через Kafka и пишет в Kafka с последующей записью в БД, тем самым в БД всегда будут актуальные данные по температуре и их можно будет забрать без ожидания")
+        Component(command, "Command component", "Spring Bean", "Обрабатывает все команды от контроллера, проверяет их валидность, если все ок, то исполняет команду (забирает из БД температуру)")
+        Component(job, "Job component", "Spring Bean", "Раз в Х время опрашивает датчики отопления и пишет в БД, тем самым в БД всегда будут актуальные данные по температуре и их можно будет забрать без ожидания")
     }
 
     Container(apiGateway, "Api-gateway", "Kong")
-    ContainerDb(db, "Database", "PostgreSQL")
-    ContainerDb(kafka, "Kafka", "Kafka")
+    ContainerDb(devicesDb, "Devices DB", "PostgreSQL")
 }
 
-Boundary(sensors, "Sensors") {
-    System(sensor1, "Устройства отопления")
+Boundary(devices, "Devices") {
+    System(device1, "Устройства отопления")
 }
 
 Rel(frontend, apiGateway, "Requests", "HTTPS")
-Rel(apiGateway, kafka, "Write")
-Rel(controller, kafka, "Read")
+Rel(apiGateway, controller, "Uses")
 Rel(controller, command, "Uses")
-Rel(command, kafka, "Uses")
-Rel(job, kafka, "Uses")
-BiRel(sensor1, kafka, "Send data", "HTTPS")
-
-Rel(kafka, db, "Read/Write")
+Rel(job, device1, "Uses", "Telemetry")
+Rel(command, devicesDb, "Read/Write", "SQL")
+Rel(job, devicesDb, "Read/Write", "SQL")
 @enduml
